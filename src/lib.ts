@@ -122,6 +122,20 @@ async function headlines(query: string, country: string, when: string): Promise<
     .filter((a) => a.url && !seen.has(a.title) && seen.add(a.title))
 }
 
+/** GNews and NewsData.io (free-plan keys live in the Worker; ~12 h delay, 10 items per call, so deep searches only). */
+async function keyed(query: string, cc: string): Promise<Article[]> {
+  const lang = (EDITION[cc in EDITION ? cc : 'US'] ?? 'en').slice(0, 2)
+  const q = query.replace(/"/g, '')
+  const [g, n] = await Promise.allSettled([
+    fetch(`${API}/gnews/search?q=${encodeURIComponent(query)}&lang=${lang}&max=10&sortby=publishedAt`).then((r) => (r.ok ? r.json() : Promise.reject())),
+    fetch(`${API}/nd/latest?q=${encodeURIComponent(q)}&language=${lang}`).then((r) => (r.ok ? r.json() : Promise.reject())),
+  ])
+  const a: Article[] = []
+  if (g.status === 'fulfilled') for (const x of g.value.articles ?? []) a.push({ url: x.url, title: x.title, source: x.source?.name ?? '', date: new Date(x.publishedAt) })
+  if (n.status === 'fulfilled') for (const x of n.value.results ?? []) a.push({ url: x.link, title: x.title, source: x.source_name ?? '', date: new Date(`${x.pubDate}Z`.replace(' ', 'T')) })
+  return a
+}
+
 /** Reddit posts mentioning the place (RSS search, via the /rd proxy). Communities, not publishers. */
 const redditCache = new Map<string, { at: number; rows: Article[] }>()
 
@@ -247,6 +261,7 @@ export async function news(place: Place, from: number, want: number, deep = true
     }
     emit()
   }
+  if (deep) await keyed(queries[0], cc).then((l) => { lists.push(l); emit() }).catch(() => {})
   // the user's own news sites: Google News restricted to each domain
   if (deep) for (const d of loadSources()) await win(`${queries[0]} site:${d}`, '')
   if (!ok) throw new Error('err.source')
