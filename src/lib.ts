@@ -92,6 +92,12 @@ export async function reverseCountry(lat: number, lon: number, _lang = 'en'): Pr
 // Bing News RSS via the /bn proxy (Vite dev proxy, a Worker in production; Google News blocks Cloudflare's IPs). Headline + source + link only.
 // shortcut: Bing returns ~14 items per feed and only knows past hour/day/week/month, so history is thinner than Google's; no archive dates.
 const EDITION: Record<string, string> = { SE: 'sv', TR: 'tr', DE: 'de', FR: 'fr', ES: 'es', AE: 'ar', GB: 'en-GB', US: 'en-US' }
+// Bing caps every feed at ~14 items, so deep searches also ask "<place> <topic word>" in the local language to reach more stories.
+const WORDS: Record<string, string> = {
+  SE: 'polis brand trafik skola bostad kommun idrott olycka', TR: 'polis yangın trafik okul belediye spor kaza', DE: 'Polizei Feuer Verkehr Schule Gemeinde Sport Unfall',
+  FR: 'police incendie circulation école mairie sport accident', ES: 'policía incendio tráfico colegio ayuntamiento deporte accidente', AE: 'شرطة حريق مرور مدرسة بلدية رياضة حادث',
+  GB: 'police fire traffic school council sport crash', US: 'police fire traffic school council sport crash',
+}
 const interval = (when: string) => { const m = /^(\d+)([hdy])$/.exec(when); if (!m) return ''; const h = +m[1] * { h: 1, d: 24, y: 8760 }[m[2] as 'h' | 'd' | 'y']; return h <= 1 ? 4 : h <= 24 ? 7 : h <= 168 ? 8 : h <= 720 ? 9 : '' }
 
 async function headlines(query: string, country: string, when: string): Promise<Article[]> {
@@ -232,6 +238,14 @@ export async function news(place: Place, from: number, want: number, deep = true
       lists.slice(before).flat().forEach((x) => seen.add(norm(x.title)))
       if (seen.size >= want && size < FULL) break
     }
+  }
+  if (deep) for (const q of queries.slice(0, 1)) {
+    for (const e of editions) {
+      const w = (WORDS[e] ?? WORDS.US).split(' ')
+      const got = await Promise.allSettled(w.map((x) => headlines(`${q} ${x}`, e, '')))
+      got.forEach((x) => { if (x.status === 'fulfilled') lists.push(x.value) })
+    }
+    emit()
   }
   // the user's own news sites: Google News restricted to each domain
   if (deep) for (const d of loadSources()) await win(`${queries[0]} site:${d}`, '')
