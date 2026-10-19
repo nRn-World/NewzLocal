@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url' // the worker is not bundled by default, so ship it as its own file
+maplibregl.setWorkerUrl(workerUrl)
 import { type Article, type Place, inQuiet, label, loadCats, loadFavs, loadLast, loadQuiet, loadSources, news, reverse, reverseCountry, saveCats, saveFavs, saveLast, saveQuiet, saveSources, search, translate, forum } from './lib'
 import { LANGS, type Lang, loadLang, saveLang, tr } from './i18n'
 import { type Area, at, boundaries, bounds, labelPoint, link, norm } from './areas'
