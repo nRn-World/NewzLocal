@@ -1,5 +1,8 @@
 import { norm } from './areas'
 
+/** Origin of the news/forum proxy (a Cloudflare Worker in production; empty = Vite's dev proxy). */
+const API = (import.meta.env.VITE_PROXY_URL as string | undefined) ?? ''
+
 export type Level = 'street' | 'district' | 'city' | 'state' | 'country'
 export type Part = { level: Level; name: string }
 export type Place = { lat: number; lon: number; cc?: string; parts: Part[]; cat?: string; alert?: string[] } // parts: most specific first
@@ -94,7 +97,7 @@ async function headlines(query: string, country: string, when: string): Promise<
   const cc = country in EDITION ? country : 'US'
   const hl = EDITION[cc]
   const q = when ? (when.includes(':') ? `${query} ${when}` : `${query} when:${when}`) : query // a feed holds at most ~100 items, so each time window digs out a different slice
-  const r = await fetch(`/gn/rss/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=${cc}&ceid=${cc}:${hl.slice(0, 2)}`, { cache: 'no-store' })
+  const r = await fetch(`${API}/gn/rss/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=${cc}&ceid=${cc}:${hl.slice(0, 2)}`, { cache: 'no-store' })
   if (!r.ok) throw new Error('err.source')
   const doc = new DOMParser().parseFromString(await r.text(), 'text/xml')
   const seen = new Set<string>()
@@ -126,7 +129,7 @@ async function reddit(query: string, max: number, sub = '', after = ''): Promise
 }
 
 async function redditFetch(query: string, max: number, sub: string, after: string): Promise<Article[]> {
-  const base = sub ? `/rd/r/${sub}/search.rss?restrict_sr=1&` : '/rd/search.rss?'
+  const base = sub ? `${API}/rd/r/${sub}/search.rss?restrict_sr=1&` : `${API}/rd/search.rss?`
   const r = await fetch(`${base}q=${encodeURIComponent(query)}&sort=new&limit=${Math.min(max, 100)}${after ? `&after=${after}` : ''}`, { cache: 'no-store' })
   if (!r.ok) throw new Error('err.source')
   const doc = new DOMParser().parseFromString(await r.text(), 'text/xml')
@@ -282,7 +285,7 @@ const fbCache = new Map<string, { at: number; rows: Article[] }>()
  * for a 5 s crawl delay, so requests are spaced 5.2 s apart and every page is cached for 5 minutes.
  */
 async function flashbackPage(query: string, order: string): Promise<Article[]> {
-  const url = `/fb/sok/?query=${encodeURIComponent(query)}&so=${order}`
+  const url = `${API}/fb/sok/?query=${encodeURIComponent(query)}&so=${order}`
   const hit = fbCache.get(url)
   if (hit && Date.now() - hit.at < 300_000) return hit.rows
   const wait = fbNext - Date.now()

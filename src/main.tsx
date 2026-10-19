@@ -10,4 +10,4 @@ createRoot(document.getElementById('root')!).render(
 )
 
 // offline app shell (production build only, so the dev server is never served stale files)
-if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register('/sw.js').catch(() => {})
+if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})
