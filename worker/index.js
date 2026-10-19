@@ -1,6 +1,6 @@
-// Cloudflare Worker: CORS proxy for NewzLocal's news and forum sources (/gn, /rd, /fb), cached for 60 s.
+// Cloudflare Worker: CORS proxy for NewzLocal's news and forum sources (/bn, /rd, /fb), cached for 60 s.
 const ORIGINS = {
-  '/gn': 'https://news.google.com',
+  '/bn': 'https://www.bing.com',
   '/rd': 'https://www.reddit.com',
   '/fb': 'https://www.flashback.org',
 }
@@ -15,7 +15,7 @@ export default {
     const prefix = Object.keys(ORIGINS).find((p) => url.pathname.startsWith(p + '/'))
     if (req.method !== 'GET' || !prefix) return new Response('Not found', { status: 404, headers: cors })
     const r = await fetch(ORIGINS[prefix] + url.pathname.slice(prefix.length) + url.search, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewzLocal/0.1; +https://nrnworld.one/NewzLocal)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' },
       cf: { cacheTtl: 60, cacheEverything: true },
     })
     return new Response(r.body, { status: r.status, headers: { ...cors, 'Content-Type': r.headers.get('Content-Type') ?? 'text/plain', 'Cache-Control': 'public, max-age=60' } })

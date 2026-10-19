@@ -89,26 +89,27 @@ export async function reverseCountry(lat: number, lon: number, _lang = 'en'): Pr
   return a && name ? { lat, lon, cc: a.country_code, parts: [{ level: 'country', name }] } : null // null over open sea
 }
 
-// Google News RSS via the /gn proxy (Vite dev proxy now, a Worker in production). Headline + source + link only.
-// Google only accepts valid hl/gl pairs (others redirect without CORS), so use each country's own edition, US English otherwise.
+// Bing News RSS via the /bn proxy (Vite dev proxy, a Worker in production; Google News blocks Cloudflare's IPs). Headline + source + link only.
+// shortcut: Bing returns ~14 items per feed and only knows past hour/day/week/month, so history is thinner than Google's; no archive dates.
 const EDITION: Record<string, string> = { SE: 'sv', TR: 'tr', DE: 'de', FR: 'fr', ES: 'es', AE: 'ar', GB: 'en-GB', US: 'en-US' }
+const interval = (when: string) => { const m = /^(\d+)([hdy])$/.exec(when); if (!m) return ''; const h = +m[1] * { h: 1, d: 24, y: 8760 }[m[2] as 'h' | 'd' | 'y']; return h <= 1 ? 4 : h <= 24 ? 7 : h <= 168 ? 8 : h <= 720 ? 9 : '' }
 
 async function headlines(query: string, country: string, when: string): Promise<Article[]> {
   const cc = country in EDITION ? country : 'US'
-  const hl = EDITION[cc]
-  const q = when ? (when.includes(':') ? `${query} ${when}` : `${query} when:${when}`) : query // a feed holds at most ~100 items, so each time window digs out a different slice
-  const r = await fetch(`${API}/gn/rss/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=${cc}&ceid=${cc}:${hl.slice(0, 2)}`, { cache: 'no-store' })
+  const iv = interval(when)
+  const r = await fetch(`${API}/bn/news/search?q=${encodeURIComponent(query)}&format=rss&cc=${cc}&setlang=${EDITION[cc]}&sortbydate=1${iv ? `&qft=${encodeURIComponent(`interval="${iv}"`)}` : ''}`, { cache: 'no-store' })
   if (!r.ok) throw new Error('err.source')
   const doc = new DOMParser().parseFromString(await r.text(), 'text/xml')
   const seen = new Set<string>()
   return [...doc.querySelectorAll('item')]
     .map((i) => {
-      const source = i.querySelector('source')?.textContent ?? ''
-      const raw = i.querySelector('title')?.textContent ?? ''
+      const link = i.querySelector('link')?.textContent ?? ''
+      let url = link
+      try { url = new URL(link).searchParams.get('url') ?? link } catch { /* keep Bing's redirect link */ }
       return {
-        url: i.querySelector('link')?.textContent ?? '',
-        title: source && raw.endsWith(` - ${source}`) ? raw.slice(0, -source.length - 3) : raw,
-        source,
+        url,
+        title: i.querySelector('title')?.textContent ?? '',
+        source: i.getElementsByTagNameNS('*', 'Source')[0]?.textContent ?? '',
         date: new Date(i.querySelector('pubDate')?.textContent ?? ''),
       }
     })
@@ -174,8 +175,8 @@ function mergeAll(lists: Article[][], key: string | undefined, want: number) {
 // A Google News feed holds ~100 items and is not sorted by date. Each time window is a nested subset, so a window that comes back
 // with fewer than FULL items is complete for its whole horizon. Digging up the ladder until we have `want` items from a complete
 // window therefore yields the true newest ones.
-const LADDER = ['1h', '2h', '3h', '4h', '6h', '8h', '12h', '16h', '20h', '1d', '2d', '3d', '5d', '7d', '10d', '14d', '21d', '30d', '60d', '90d', '180d', '1y']
-const FULL = 95
+const LADDER = ['1h', '1d', '7d', '30d']
+const FULL = 10 // Bing's feed holds ~14 items, so 10+ means the window may be cut off
 
 const SRC = 'newzlocal.sources'
 export const loadSources = (): string[] => {
