@@ -1,0 +1,54 @@
+NewzLocal Non-Commercial Educational License (NNEL) v1.0
+
+Copyright (c) 2026 nRnWorld (https://nrnworld.one)
+All rights reserved except as granted below.
+
+1. GRANT
+   Permission is granted, free of charge, to any person obtaining a copy of this
+   software and associated files (the "Software") to use, copy, modify and share
+   the Software for PERSONAL, EDUCATIONAL, and RESEARCH purposes only, subject to
+   the conditions below.
+
+2. CONDITIONS
+
+   a) Attribution. Every copy, fork, derivative work, or project that contains or
+      is based on any part of the Software must visibly credit
+      "NewzLocal by nRnWorld" (with a link to https://github.com/nRn-World/NewzLocal
+      or https://nrnworld.one). The credit must appear in the project's README or
+      license file and in the application's "About" section or footer if it has
+      a user interface. This license text must be included with all copies.
+
+   b) No commercial use. You may NOT sell, sublicense, rent, or otherwise make
+      money from the Software or anything derived from it. This includes, without
+      limitation: selling the Software or derivatives, offering it as a paid
+      product or subscription, including it in a paid product or service, showing
+      advertisements in it, collecting payment or donations in exchange for it, or
+      using it to provide paid services to clients.
+
+   c) Educational use is allowed. Teaching, coursework, tutorials, workshops, and
+      academic or personal study are permitted, provided condition (a) is met and
+      no fee is charged for the Software itself.
+
+   d) Commercial licensing. Anyone who wants to use the Software commercially must
+      first obtain a separate written license from nRnWorld.
+
+3. THIRD-PARTY SERVICES AND DATA
+   The Software connects to third-party services and data sources (for example
+   news feeds, map tiles, geocoding, and forums). Those services have their own
+   terms, which may not allow commercial use. This license does not grant any
+   rights to them. You are responsible for following their terms.
+
+4. TERMINATION
+   Your rights under this license end automatically if you break any of its
+   conditions.
+
+5. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+Contact: https://nrnworld.one
