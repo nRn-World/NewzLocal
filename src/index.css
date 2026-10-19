@@ -202,8 +202,8 @@ footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--ink);color:var
 .chip input{width:150px;padding:4px 8px;border:0;font:700 12px 'Courier Prime',monospace}
 .cathead{margin:8px 0 4px;font:900 15px Fraunces,Georgia,serif;text-transform:uppercase;letter-spacing:.06em;border-bottom:3px double var(--ink)}
 .favrow{display:flex;align-items:stretch;gap:6px}
-.favrow>button{flex:1;min-width:0}
-.favrow>.cmp,.favrow>.bell{flex:none}
+.favrow>button{flex:1;min-width:0;width:auto}
+.favrow>.cmp,.favrow>.bell{flex:none;width:auto}
 .favrow select{max-width:38%;flex:none;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:12px 'Courier Prime',monospace;margin:4px 0;padding:0 4px}
 
 .favrow{cursor:grab;user-select:none;-webkit-user-select:none}
@@ -231,7 +231,7 @@ footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--ink);color:var
 .modal .paper-x{position:absolute;top:10px;right:10px}
 .favrow .bell,.favrow .cmp{border:2px solid var(--ink);background:var(--paper);margin:4px 0;padding:0 6px;font-size:13px}
 .favrow .on{background:var(--ink);color:var(--paper)}
-.alertbox{padding:4px 2px 8px}
+.alertbox{padding:4px 2px 8px;flex:0 0 100%}
 .alertbox .chips{margin-top:4px}
 .settings{display:grid;gap:6px;border-top:1px solid var(--ink);padding-top:8px;font-size:12px}
 .settings h4{margin:0;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
