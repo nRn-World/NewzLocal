@@ -203,7 +203,8 @@ footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--ink);color:var
 .cathead{margin:8px 0 4px;font:900 15px Fraunces,Georgia,serif;text-transform:uppercase;letter-spacing:.06em;border-bottom:3px double var(--ink)}
 .favrow{display:flex;align-items:stretch;gap:6px}
 .favrow>button{flex:1;min-width:0}
-.favrow select{max-width:38%;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:12px 'Courier Prime',monospace;margin:4px 0;padding:0 4px}
+.favrow>.cmp,.favrow>.bell{flex:none}
+.favrow select{max-width:38%;flex:none;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:12px 'Courier Prime',monospace;margin:4px 0;padding:0 4px}
 
 .favrow{cursor:grab;user-select:none;-webkit-user-select:none}
 .grip{display:grid;place-items:center;padding:0 4px;color:var(--mu);font-size:16px;cursor:grab;touch-action:none}
