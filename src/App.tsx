@@ -6,9 +6,8 @@ import { LANGS, type Lang, loadLang, saveLang, tr } from './i18n'
 import { type Area, at, boundaries, bounds, labelPoint, link, norm } from './areas'
 import { SKY, earthStyle } from './mapStyle'
 import Paper from './Paper'
-import Compare from './Compare'
 import { Report, TimeTravel, TopicBar } from './Insights'
-import { TOPICS, topicsOf } from './topics'
+import { topicsOf } from './topics'
 import { type Street, circle, places, streets, subAreas } from './overpass'
 import './index.css'
 
@@ -50,14 +49,11 @@ export default function App() {
   const [paperOpen, setPaperOpen] = useState(false)
   const [topic, setTopic] = useState('') // topic filter on the news list
   const [months, setMonths] = useState(0) // 0 = now, else the news from about that many months ago
-  const [cmp, setCmp] = useState<string[]>([]) // favourites ticked for comparison
-  const [cmpOpen, setCmpOpen] = useState(false)
   const [mine, setMine] = useState<Article[] | null>(null) // "my newspaper": the newest headlines from all favourites
   const [mineBusy, setMineBusy] = useState(false)
   const [quiet, setQuiet] = useState(loadQuiet)
   const [srcs, setSrcs] = useState<string[]>(loadSources)
   const [srcDraft, setSrcDraft] = useState('')
-  const [alertOpen, setAlertOpen] = useState('') // favourite whose alert settings are open
   const [copied, setCopied] = useState(false)
   const [offline, setOffline] = useState(false)
   const heat = useRef<Record<string, number>>({}) // headlines mentioning each shown area
@@ -391,10 +387,6 @@ export default function App() {
     } finally { setMineBusy(false) }
   }
 
-  const setAlertTopics = (f: Place, topics: string[]) => {
-    const n = favs.map((x) => (label(x) === label(f) ? { ...x, alert: topics.length ? topics : undefined } : x))
-    setFavs(n); saveFavs(n)
-  }
   const addSource = () => {
     const d = srcDraft.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
     if (!d.includes('.') || srcs.includes(d)) return setSrcDraft('')
@@ -467,35 +459,7 @@ export default function App() {
 
   const favRow = (f: Place) => (
     <li key={label(f)} className="favrow" style={{ flexWrap: 'wrap' }} onPointerDown={(e) => startDrag(e, f)}>
-      <span className="grip" aria-hidden="true">⠿</span>
       <button onClick={() => !justDragged.current && openFav(f)}>{label(f)}{unread[label(f)] ? <b className="badge">+{unread[label(f)]}</b> : null}</button>
-      <button className={cmp.includes(label(f)) ? 'cmp on' : 'cmp'} title={t('compare')} aria-label={t('compare')} onClick={() => setCmp((c) => (c.includes(label(f)) ? c.filter((x) => x !== label(f)) : [...c, label(f)].slice(-2)))}>⇄</button>
-      <button className={f.alert?.length || alertOpen === label(f) ? 'bell on' : 'bell'} title={t('alerts')} aria-label={t('alerts')} onClick={() => setAlertOpen((a) => (a === label(f) ? '' : label(f)))}>♪</button>
-      <select
-        value={f.cat ?? ''}
-        aria-label={t('category')}
-        onChange={(e) => {
-          if (e.target.value !== '__new') return setCatOf(f, e.target.value)
-          const name = addCat(window.prompt(t('newCat')) ?? '')
-          if (name) setCatOf(f, name)
-        }}
-      >
-        <option value="">{t('noCat')}</option>
-        {catNames.map((c) => <option key={c} value={c}>{c}</option>)}
-        <option value="__new">＋ {t('newCat')}</option>
-      </select>
-      {alertOpen === label(f) && (
-        <div className="alertbox" onPointerDown={(e) => e.stopPropagation()}>
-          <span>{t('alertTopics')}:</span>
-          <div className="chips">
-            <button className={!f.alert?.length ? 'chip on' : 'chip'} onClick={() => setAlertTopics(f, [])}>{t('alertAll')}</button>
-            {TOPICS.map((x) => {
-              const on = f.alert?.includes(x.id)
-              return <button key={x.id} className={on ? 'chip on' : 'chip'} onClick={() => setAlertTopics(f, on ? f.alert!.filter((y) => y !== x.id) : [...(f.alert ?? []), x.id])}>{t('t' + x.id)}</button>
-            })}
-          </div>
-        </div>
-      )}
     </li>
   )
 
@@ -583,8 +547,7 @@ export default function App() {
             )}
             <div className="chips">
               <button className="chip on" disabled={!favs.length || mineBusy} onClick={openMyPaper}>▤ {mineBusy ? '…' : t('myPaper')}</button>
-              {cmp.length === 2 ? <button className="chip on" onClick={() => setCmpOpen(true)}>⇄ {t('compare')}</button> : favs.length > 1 && <span className="muted small">{t('compareHint')}</span>}
-            </div>
+                          </div>
             <div className="chips">
               <button className={!favCat ? 'chip on' : 'chip'} onClick={() => setFavCat('')}>{t('allCats')} ({favs.length})</button>
               {catNames.map((c) => (
@@ -683,7 +646,6 @@ export default function App() {
         <footer>{t('footer')}</footer>
       </aside>
       {drag && <div className="ghost" style={{ left: drag.x + 12, top: drag.y + 12 }}>{drag.name}</div>}
-      {cmpOpen && cmp.length === 2 && <Compare places={favs.filter((f) => cmp.includes(label(f)))} t={t} onClose={() => setCmpOpen(false)} />}
       {mine && (
         <Paper
           articles={mine}
