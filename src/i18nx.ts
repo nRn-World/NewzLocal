@@ -12,7 +12,7 @@ const en: D = {
   myPaper: 'My newspaper', myPaperEmpty: 'Add favourites first.', myPaperPlace: 'My favourites',
   compare: 'Compare', compareTitle: 'Compare places', compareHint: 'Tick two favourites with ⇄ to compare them.', cmpTotal: 'News found', cmp24: 'Last 24 h', cmp7: 'Last 7 days',
   cmpTopics: 'Main topics', cmpWords: 'Hot words', cmpSources: 'Sources', cmpLoading: 'Comparing…',
-  alerts: 'Alerts', alertTopics: 'Alert me about', alertAll: 'Everything', quiet: 'Quiet hours (no pop-ups)', quietFrom: 'from', quietTo: 'to',
+  alerts: 'Alerts', alertTopics: 'Alert me about', alertAll: 'Everything', quiet: 'Quiet hours for this category (no pop-ups)', quietFrom: 'from', quietTo: 'to',
   share: 'Share', copied: 'Link copied', mySources: 'My news sources', addSource: 'Add a news site, e.g. mitti.se', removeSource: 'Remove',
   offline: 'Offline: showing saved news', install: 'Install app',
 }
@@ -26,7 +26,7 @@ const sv: D = {
   myPaper: 'Min tidning', myPaperEmpty: 'Lägg till favoriter först.', myPaperPlace: 'Mina favoriter',
   compare: 'Jämför', compareTitle: 'Jämför platser', compareHint: 'Bocka i två favoriter med ⇄ för att jämföra dem.', cmpTotal: 'Nyheter hittade', cmp24: 'Senaste 24 h', cmp7: 'Senaste 7 dagarna',
   cmpTopics: 'Största ämnen', cmpWords: 'Heta ord', cmpSources: 'Källor', cmpLoading: 'Jämför…',
-  alerts: 'Larm', alertTopics: 'Larma mig om', alertAll: 'Allt', quiet: 'Tysta timmar (inga popup)', quietFrom: 'från', quietTo: 'till',
+  alerts: 'Larm', alertTopics: 'Larma mig om', alertAll: 'Allt', quiet: 'Tysta timmar för kategorin (inga popup)', quietFrom: 'från', quietTo: 'till',
   share: 'Dela', copied: 'Länk kopierad', mySources: 'Mina nyhetskällor', addSource: 'Lägg till en nyhetssajt, t.ex. mitti.se', removeSource: 'Ta bort',
   offline: 'Offline: visar sparade nyheter', install: 'Installera appen',
 }

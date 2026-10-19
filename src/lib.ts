@@ -406,15 +406,17 @@ export const saveFavs = (f: Place[]) => {
   try { localStorage.setItem(FAV, JSON.stringify(f)) } catch { /* private mode */ }
 }
 export type Quiet = { on: boolean; from: string; to: string }
-export const loadQuiet = (): Quiet => {
-  try { return { on: false, from: '22:00', to: '07:00', ...JSON.parse(localStorage.getItem('newzlocal.quiet') ?? '{}') } } catch { return { on: false, from: '22:00', to: '07:00' } }
+export const QUIET0: Quiet = { on: false, from: '22:00', to: '07:00' }
+/** Quiet hours per favourites category. */
+export const loadQuiet = (): Record<string, Quiet> => {
+  try { return JSON.parse(localStorage.getItem('newzlocal.quietCats') ?? '{}') } catch { return {} }
 }
-export const saveQuiet = (q: Quiet) => {
-  try { localStorage.setItem('newzlocal.quiet', JSON.stringify(q)) } catch { /* private mode */ }
+export const saveQuiet = (q: Record<string, Quiet>) => {
+  try { localStorage.setItem('newzlocal.quietCats', JSON.stringify(q)) } catch { /* private mode */ }
 }
 /** Is `now` inside the quiet hours (which may wrap past midnight)? */
-export const inQuiet = (q: Quiet, now = new Date()) => {
-  if (!q.on) return false
+export const inQuiet = (q: Quiet | undefined, now = new Date()) => {
+  if (!q?.on) return false
   const m = now.getHours() * 60 + now.getMinutes()
   const [fh, fm] = q.from.split(':').map(Number)
   const [th, tm] = q.to.split(':').map(Number)

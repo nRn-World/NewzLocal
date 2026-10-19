@@ -3,7 +3,7 @@ import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url' // the worker is not bundled by default, so ship it as its own file
 maplibregl.setWorkerUrl(workerUrl)
-import { type Article, type Place, inQuiet, label, loadCats, loadFavs, loadLast, loadQuiet, loadSources, news, reverse, reverseCountry, saveCats, saveFavs, saveLast, saveQuiet, saveSources, search, translate, forum } from './lib'
+import { type Article, type Quiet, type Place, inQuiet, QUIET0, label, loadCats, loadFavs, loadLast, loadQuiet, loadSources, news, reverse, reverseCountry, saveCats, saveFavs, saveLast, saveQuiet, saveSources, search, translate, forum } from './lib'
 import { LANGS, type Lang, loadLang, saveLang, tr } from './i18n'
 import { type Area, at, boundaries, bounds, labelPoint, link, norm } from './areas'
 import { SKY, earthStyle } from './mapStyle'
@@ -483,7 +483,7 @@ export default function App() {
           const fresh = f.alert?.length ? newOnes.filter((a) => topicsOf(a.orig ?? a.title).some((id) => f.alert!.includes(id))) : newOnes // per-favourite topic alerts
           seen[key] = [...new Set([...articles.map((a) => a.url), ...(old ?? [])])].slice(0, 200)
           if (fresh.length) setFreshArts((u) => ({ ...u, [key]: [...fresh, ...(u[key] ?? [])].slice(0, 50) }))
-          if (fresh.length && 'Notification' in window && Notification.permission === 'granted' && !inQuiet(loadQuiet())) {
+          if (fresh.length && 'Notification' in window && Notification.permission === 'granted' && !inQuiet(f.cat ? loadQuiet()[f.cat] : undefined)) {
             const [first] = await translate([fresh[0]], langRef.current)
             const n = new Notification(key, { body: fresh.length > 1 ? `${first.title} (+${fresh.length - 1})` : first.title, tag: key, renotify: true } as NotificationOptions) // renotify: a repeated tag would otherwise replace the old one silently
             n.onclick = () => { window.focus(); pick(f) }
@@ -567,6 +567,16 @@ export default function App() {
                 </form>
               )}
             </div>
+            {favCat && (() => {
+              const q = quiet[favCat] ?? QUIET0
+              const set = (p: Partial<Quiet>) => { const n = { ...quiet, [favCat]: { ...q, ...p } }; setQuiet(n); saveQuiet(n) }
+              return (
+                <div className="settings">
+                  <label className="row"><input type="checkbox" checked={q.on} onChange={(e) => set({ on: e.target.checked })} /> {t('quiet')}</label>
+                  {q.on && <div className="row">{t('quietFrom')} <input type="time" value={q.from} onChange={(e) => set({ from: e.target.value })} /> {t('quietTo')} <input type="time" value={q.to} onChange={(e) => set({ to: e.target.value })} /></div>}
+                </div>
+              )
+            })()}
             {favs.length === 0 && <p className="muted">{t('noFavs')}</p>}
             {favCat ? (
               <ul className="hits">{favs.filter((f) => f.cat === favCat).map(favRow)}</ul>
@@ -582,12 +592,6 @@ export default function App() {
             )}
             <p className="muted small">{t('notifyHint')}</p>
             <div className="settings">
-              <h4>{t('quiet')}</h4>
-              <div className="row">
-                <input type="checkbox" checked={quiet.on} onChange={(e) => { const q = { ...quiet, on: e.target.checked }; setQuiet(q); saveQuiet(q) }} aria-label={t('quiet')} />
-                {t('quietFrom')} <input type="time" value={quiet.from} onChange={(e) => { const q = { ...quiet, from: e.target.value }; setQuiet(q); saveQuiet(q) }} />
-                {t('quietTo')} <input type="time" value={quiet.to} onChange={(e) => { const q = { ...quiet, to: e.target.value }; setQuiet(q); saveQuiet(q) }} />
-              </div>
               <h4>{t('mySources')}</h4>
               <div className="row">
                 {srcs.map((d) => <span key={d} className="srcchip"><span style={{ padding: '2px 6px' }}>{d}</span><button onClick={() => delSource(d)} aria-label={`${t('removeSource')} ${d}`}>×</button></span>)}
