@@ -23,6 +23,7 @@ jobs:
       - run: npm run build
         env:
           VITE_PROXY_URL: ${{ vars.VITE_PROXY_URL }}
+          VITE_GN_URL: ${{ vars.VITE_GN_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

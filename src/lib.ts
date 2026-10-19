@@ -100,7 +100,7 @@ const WORDS: Record<string, string> = {
 }
 const interval = (when: string) => { const m = /^(\d+)([hdy])$/.exec(when); if (!m) return ''; const h = +m[1] * { h: 1, d: 24, y: 8760 }[m[2] as 'h' | 'd' | 'y']; return h <= 1 ? 4 : h <= 24 ? 7 : h <= 168 ? 8 : h <= 720 ? 9 : '' }
 
-async function headlines(query: string, country: string, when: string): Promise<Article[]> {
+async function bingHeadlines(query: string, country: string, when: string): Promise<Article[]> {
   const cc = country in EDITION ? country : 'US'
   const iv = interval(when)
   const r = await fetch(`${API}/bn/news/search?q=${encodeURIComponent(query)}&format=rss&cc=${cc}&setlang=${EDITION[cc]}&sortbydate=1${iv ? `&qft=${encodeURIComponent(`interval="${iv}"`)}` : ''}`, { cache: 'no-store' })
@@ -121,6 +121,35 @@ async function headlines(query: string, country: string, when: string): Promise<
     })
     .filter((a) => a.url && !seen.has(a.title) && seen.add(a.title))
 }
+
+// Google News RSS (the best source: ~100 items per feed, time windows) via VITE_GN_URL, a Vercel function, because Google blocks Cloudflare's IPs.
+// Bing (via the Worker) is the fallback when Google refuses.
+const GN = (import.meta.env.VITE_GN_URL as string | undefined) ?? `${API}/gn/rss/search`
+
+async function googleHeadlines(query: string, country: string, when: string): Promise<Article[]> {
+  const cc = country in EDITION ? country : 'US'
+  const hl = EDITION[cc]
+  const q = when ? (when.includes(':') ? `${query} ${when}` : `${query} when:${when}`) : query // each time window digs out a different slice of the feed
+  const r = await fetch(`${GN}?q=${encodeURIComponent(q)}&hl=${hl}&gl=${cc}&ceid=${cc}:${hl.slice(0, 2)}`, { cache: 'no-store' })
+  if (!r.ok) throw new Error('err.source')
+  const doc = new DOMParser().parseFromString(await r.text(), 'text/xml')
+  if (doc.querySelector('parsererror')) throw new Error('err.source')
+  const seen = new Set<string>()
+  return [...doc.querySelectorAll('item')]
+    .map((i) => {
+      const source = i.querySelector('source')?.textContent ?? ''
+      const raw = i.querySelector('title')?.textContent ?? ''
+      return {
+        url: i.querySelector('link')?.textContent ?? '',
+        title: source && raw.endsWith(` - ${source}`) ? raw.slice(0, -source.length - 3) : raw,
+        source,
+        date: new Date(i.querySelector('pubDate')?.textContent ?? ''),
+      }
+    })
+    .filter((a) => a.url && !seen.has(a.title) && seen.add(a.title))
+}
+
+const headlines = (query: string, country: string, when: string) => googleHeadlines(query, country, when).catch(() => bingHeadlines(query, country, when))
 
 /** GNews and NewsData.io (free-plan keys live in the Worker; ~12 h delay, 10 items per call, so deep searches only). */
 async function keyed(query: string, cc: string): Promise<Article[]> {
@@ -195,8 +224,8 @@ function mergeAll(lists: Article[][], key: string | undefined, want: number) {
 // A Google News feed holds ~100 items and is not sorted by date. Each time window is a nested subset, so a window that comes back
 // with fewer than FULL items is complete for its whole horizon. Digging up the ladder until we have `want` items from a complete
 // window therefore yields the true newest ones.
-const LADDER = ['1h', '1d', '7d', '30d']
-const FULL = 10 // Bing's feed holds ~14 items, so 10+ means the window may be cut off
+const LADDER = ['1h', '2h', '3h', '4h', '6h', '8h', '12h', '16h', '20h', '1d', '2d', '3d', '5d', '7d', '10d', '14d', '21d', '30d', '60d', '90d', '180d', '1y']
+const FULL = 95
 
 const SRC = 'newzlocal.sources'
 export const loadSources = (): string[] => {
@@ -256,7 +285,7 @@ export async function news(place: Place, from: number, want: number, deep = true
   if (deep) for (const q of queries.slice(0, 1)) {
     for (const e of editions) {
       const w = (WORDS[e] ?? WORDS.US).split(' ')
-      const got = await Promise.allSettled(w.map((x) => headlines(`${q} ${x}`, e, '')))
+      const got = await Promise.allSettled(w.map((x) => bingHeadlines(`${q} ${x}`, e, '')))
       got.forEach((x) => { if (x.status === 'fulfilled') lists.push(x.value) })
     }
     emit()
